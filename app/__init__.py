@@ -11,8 +11,9 @@ def create_app():
         app.config.update(json.load(f))
     
     # Register blueprints
-    from app.routes import main
+    from app.routes import main, media
     app.register_blueprint(main.bp)
+    app.register_blueprint(media.bp)
     
     return app
 

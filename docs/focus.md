@@ -54,6 +54,16 @@
 - API documentation
 - Troubleshooting guide
 
+## Task 2: Add media/refresh endpoint
+- Add skeleton endpoint using the blueprint pattern with a TODO method
+- Return a dummy response
+
+## Task 3: Send request to JellyFin API
+- Send request to JellyFin to refresh all libraries
+- Get JellyFin url and TOKEN from config.json
+- Return 200 if successful, else an appropriate error status code
+
+
 ## Remaining Considerations:
 - Add logging configuration
 - Consider adding basic error handling middleware
