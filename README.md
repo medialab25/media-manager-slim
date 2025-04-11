@@ -116,6 +116,111 @@ sudo systemctl status media-manager
   }
   ```
 
+- `POST /media/merge`: Start the media merge process
+  ```json
+  {
+    "status": "ok",
+    "message": "Merge process completed successfully"
+  }
+  ```
+
+- `GET /media/merge/status`: Get current status of media merge configuration
+  ```json
+  {
+    "status": "ok",
+    "config": {
+      "user": "media",
+      "group": "media",
+      "quality_order": ["4k", "uhd", "hd", "sd"],
+      "types": {
+        "tv": {
+          "source_paths": ["/path/to/source"],
+          "merged_path": "/path/to/merged"
+        },
+        "movies": {
+          "source_paths": ["/path/to/source"],
+          "merged_path": "/path/to/merged"
+        }
+      }
+    }
+  }
+  ```
+
+- `POST /media/refresh`: Refresh JellyFin libraries
+  ```json
+  {
+    "status": "ok",
+    "message": "Successfully refreshed JellyFin libraries"
+  }
+  ```
+
+## Media Merge Configuration
+
+The media merge feature allows you to combine media files from multiple source paths into a single merged location, with automatic quality selection based on a priority order.
+
+### Configuration
+
+Add the following to your `config.json`:
+
+```json
+{
+  "MEDIA_MERGE": {
+    "user": "media",
+    "group": "media",
+    "quality_order": ["4k", "uhd", "hd", "sd"],
+    "types": {
+      "tv": {
+        "source_paths": ["/path/to/source"],
+        "merged_path": "/path/to/merged"
+      },
+      "movies": {
+        "source_paths": ["/path/to/source"],
+        "merged_path": "/path/to/merged"
+      }
+    }
+  }
+}
+```
+
+### Features
+
+1. **Quality-based Merging**
+   - Files are merged based on quality order (e.g., 4k > uhd > hd > sd)
+   - Higher quality versions take precedence over lower quality ones
+
+2. **Automatic Cleanup**
+   - Files that no longer exist in any source path are automatically removed from the merged location
+   - Empty directories are cleaned up after file removal
+   - Hard links are used to save disk space
+
+3. **Permission Management**
+   - All created directories and files maintain correct ownership and permissions
+   - Uses the configured user and group for file operations
+
+### Example
+
+Given the following structure:
+```
+/source1/
+  show1/
+    episode1-4k.mkv
+    episode2-4k.mkv
+/source2/
+  show1/
+    episode1-hd.mkv
+    episode2-hd.mkv
+```
+
+After merging with quality order ["4k", "hd"], the merged location will contain:
+```
+/merged/
+  show1/
+    episode1-4k.mkv  (from source1)
+    episode2-4k.mkv  (from source1)
+```
+
+If a file is removed from all source paths, it will be automatically removed from the merged location during the next merge operation.
+
 ## Project Structure
 
 ```

@@ -91,6 +91,9 @@ def merge_media(config):
             # Track processed folders to avoid duplicates
             processed_folders = set()
             
+            # Track files that should exist in merged location
+            expected_files = set()
+            
             # Process source paths in quality order
             for source_path in paths['source_paths']:
                 print(f"\nChecking source path: {source_path}")
@@ -138,6 +141,7 @@ def merge_media(config):
                             
                         # Create hard link in merged folder with quality suffix
                         merged_file = os.path.join(merged_folder, f"{base_name}-{quality}{os.path.splitext(file)[1]}")
+                        expected_files.add(merged_file)  # Track expected file
                         print(f"Creating hard link: {source_file} -> {merged_file}")
                         if os.path.exists(merged_file):
                             print(f"Removing existing file: {merged_file}")
@@ -147,6 +151,31 @@ def merge_media(config):
                         
                     processed_folders.add(folder)
                     print(f"Folder processed: {folder}")
+            
+            # Cleanup: Remove files that no longer exist in source paths
+            print("\nStarting cleanup of removed files...")
+            for root, _, files in os.walk(merged_path):
+                for file in files:
+                    merged_file = os.path.join(root, file)
+                    if merged_file not in expected_files:
+                        print(f"Removing orphaned file: {merged_file}")
+                        try:
+                            os.remove(merged_file)
+                            print(f"Successfully removed: {merged_file}")
+                        except Exception as e:
+                            print(f"Error removing file {merged_file}: {str(e)}")
+            
+            # Cleanup: Remove empty directories
+            print("\nCleaning up empty directories...")
+            for root, dirs, _ in os.walk(merged_path, topdown=False):
+                for dir_name in dirs:
+                    dir_path = os.path.join(root, dir_name)
+                    try:
+                        if not os.listdir(dir_path):
+                            print(f"Removing empty directory: {dir_path}")
+                            os.rmdir(dir_path)
+                    except Exception as e:
+                        print(f"Error removing directory {dir_path}: {str(e)}")
                     
         print("\nMedia merge process completed successfully")
                     
