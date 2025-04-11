@@ -3,7 +3,7 @@
 ## Details
 - Merge multiple folders representing different qualities to single folder
 - All merging done via linux hard links
-- Source folders must follow the naming pattern: `{type}-{quality}` (e.g., `tv-hd`, `movies-uhd`)
+- Source folders must follow the naming pattern: `{type}-{quality}` (e.g., `tv-hd`, `tv-uhd`, `tv-4k`)
 - Multiple types can exist, each with their own set of quality levels
 - Types are completely independent - no shared configuration
 - Quality levels are defined globally and used by all types
@@ -38,11 +38,19 @@
     "quality_order": ["4k", "uhd", "hd", "sd"],  // Highest to lowest quality
     "types": {
         "tv": {
-            "source_path": "/absolute/path/to/tv",
+            "source_paths": [
+                "/absolute/path/to/tv-4k",
+                "/absolute/path/to/tv-uhd",
+                "/absolute/path/to/tv-hd"
+            ],
             "merged_path": "/absolute/path/to/tv-merged"
         },
         "movies": {
-            "source_path": "/absolute/path/to/movies",
+            "source_paths": [
+                "/absolute/path/to/movies-4k",
+                "/absolute/path/to/movies-uhd",
+                "/absolute/path/to/movies-hd"
+            ],
             "merged_path": "/absolute/path/to/movies-merged"
         }
     }
@@ -56,22 +64,24 @@
    b. Set merged directory ownership to user:group from config
    c. Set merged directory permissions to 755
 3. For each type:
-   a. For each quality level in order (highest to lowest):
-      i. Scan source directory for folders
-      ii. For each folder found:
-          - If folder doesn't exist in merged directory:
-            * Create folder in merged directory with same name as source
-            * Set ownership and permissions
-            * For each file in the folder:
-              - Create hard link
-              - Preserve original file's permissions and ownership
-          - If folder exists in merged directory:
-            * Skip (already have higher quality version)
+   a. For each source path in order (highest to lowest quality):
+      i. Extract quality from path name
+      ii. If quality matches a defined quality level:
+          - Scan source directory for folders
+          - For each folder found:
+            * If folder doesn't exist in merged directory:
+              - Create folder in merged directory with same name as source
+              - Set ownership and permissions
+              - For each file in the folder:
+                - Create hard link
+                - Preserve original file's permissions and ownership
+            * If folder exists in merged directory:
+              - Skip (already have higher quality version)
 4. Complete when all types and qualities processed
 
 ## File Operations
 - Hard links preserve original file's permissions and ownership
-- Existing files in merged directory are not modified
+- Existing files in merged directory are removed before creating new hard links
 - Only new hard links are created when needed
 - No files are copied or moved, only hard linked
 - Files are matched based on identical folder names across quality levels
@@ -95,6 +105,10 @@
 - All errors are caught and handled generically
 - Process assumes user:group exists on the system
 - No special error handling for permission or ownership issues
+- Missing source paths are skipped
+- Invalid quality levels in path names are skipped
+- Directory creation errors are reported
+- File linking errors are reported
 
 ## Requirements
 - Only delete a hard link if it is going to be updated with a different source file
@@ -199,6 +213,63 @@ Action:
 Output:
 - tv-merged/movie_1/film-uhd.mkv
 
+## API Endpoints
+
+### GET /media/merge/status
+Returns the current configuration status including:
+- User and group settings
+- Quality order
+- Source paths and merged paths for each media type
+
+Example Response:
+```json
+{
+    "status": "ok",
+    "config": {
+        "user": "media",
+        "group": "media",
+        "quality_order": ["4k", "uhd", "hd", "sd"],
+        "types": {
+            "tv": {
+                "source_paths": [
+                    "/media/tv-4k",
+                    "/media/tv-uhd",
+                    "/media/tv-hd"
+                ],
+                "merged_path": "/media/tv-merged"
+            },
+            "movies": {
+                "source_paths": [
+                    "/media/movies-4k",
+                    "/media/movies-uhd",
+                    "/media/movies-hd"
+                ],
+                "merged_path": "/media/movies-merged"
+            }
+        }
+    }
+}
+```
+
+### POST /media/merge
+Starts the media merge process. Returns success when complete.
+
+Example Response:
+```json
+{
+    "status": "ok",
+    "message": "Merge process completed successfully"
+}
+```
+
+Error Response:
+```json
+{
+    "status": "error",
+    "message": "Error message describing the issue"
+}
+```
+
 ## Frequently Asked Questions
 
 ### File Naming
@@ -206,4 +277,9 @@ Output:
 - The system matches files based on their relative paths within the quality folders
 
 ### Directory Structure
-- Source directories must follow the pattern: `
+- Source directories must follow the pattern: `{type}-{quality}`
+- Each source directory can contain multiple folders
+- Each folder represents a movie or TV show
+- The folder structure is flat (no subdirectories)
+- All files within a folder are processed
+- File names can differ between quality levels

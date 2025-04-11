@@ -11,6 +11,10 @@ def create_app():
         config = json.load(f)
         print(f"Loaded configuration: {json.dumps(config, indent=2)}")
         app.config.update(config)
+        
+        # Ensure MEDIA_MERGE config is available
+        if 'MEDIA_MERGE' not in app.config:
+            raise ValueError("MEDIA_MERGE configuration not found in config.json")
     
     # Register blueprints
     from app.routes import main, media
