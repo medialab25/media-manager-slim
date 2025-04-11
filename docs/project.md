@@ -4,7 +4,7 @@
 - named: media-manager-slim
 - Linux service that accepts http requests to perform function
 - Codebase: Python
-- Dependencies: Flask
+- Dependencies: Flask, requests
 - Uses systemd as framework
 
 ## Requirements
@@ -28,13 +28,17 @@
   - Endpoints:
     - POST /refresh
       - Returns 200 OK with status message
-      - Currently returns dummy response
-      - TODO: Implement JellyFin API integration
+      - Makes request to JellyFin API to refresh libraries
+      - Error responses:
+        - 500: JellyFin server unreachable
+        - 401: Invalid JellyFin token
+        - 400: Other JellyFin API errors
 
 ### Media Control Functions
 - Specific functions to be implemented in the `/media` endpoint:
   - refresh (Implemented as POST endpoint)
-    - Returns: {"status": "ok", "message": "..."}
+    - Returns: {"status": "ok", "message": "..."} on success
+    - Returns: {"status": "error", "message": "..."} on failure
   - merge (To be implemented)
   - rebuild-cache (To be implemented)
 - Parameters to be specified
@@ -45,12 +49,19 @@
 {
     "DEBUG": false,
     "HOST": "0.0.0.0",
-    "PORT": 5000
+    "PORT": 5000,
+    "JELLYFIN": {
+        "URL": "http://your-jellyfin-server",
+        "TOKEN": "your-api-token"
+    }
 }
 ```
-- Can be expanded for:
-  - JellyFin API configuration
-  - Additional service settings
+- Required fields:
+  - DEBUG: boolean
+  - HOST: string
+  - PORT: number
+  - JELLYFIN.URL: string
+  - JELLYFIN.TOKEN: string
 - Have a global Config loader in app/__init__.py
 
 ### Structure

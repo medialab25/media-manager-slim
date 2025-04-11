@@ -27,6 +27,7 @@
 - Basic configuration structure
 - Host and port settings
 - Debug mode toggle
+- JellyFin configuration (URL and TOKEN)
 
 ✅ Add systemd service file
 - Service file template
@@ -55,14 +56,24 @@
 - Troubleshooting guide
 
 ## Task 2: Add media/refresh endpoint
-- Add skeleton endpoint using the blueprint pattern with a TODO method
-- Return a dummy response
+✅ Add skeleton endpoint using the blueprint pattern with a TODO method
+- Created media.py blueprint in app/routes/
+- Implemented POST /media/refresh endpoint
+- Added blueprint registration in app/__init__.py
+- Endpoint returns 200 OK with dummy response
+- Tested and verified working with curl
+- Updated project documentation
 
 ## Task 3: Send request to JellyFin API
-- Send request to JellyFin to refresh all libraries
+- Send request to JellyFin to refresh all libraries from the /media/refresh endpoint
 - Get JellyFin url and TOKEN from config.json
-- Return 200 if successful, else an appropriate error status code
-
+- Return appropriate status codes:
+  - 200: Success
+  - 500: JellyFin server unreachable
+  - 401: Invalid JellyFin token
+  - 400: Other JellyFin API errors
+- Use: https://api.jellyfin.org/#tag/Library/operation/RefreshLibrary
+- Add requests library to requirements.txt
 
 ## Remaining Considerations:
 - Add logging configuration

@@ -8,7 +8,9 @@ def create_app():
     # Load configuration
     config_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'config.json')
     with open(config_path) as f:
-        app.config.update(json.load(f))
+        config = json.load(f)
+        print(f"Loaded configuration: {json.dumps(config, indent=2)}")
+        app.config.update(config)
     
     # Register blueprints
     from app.routes import main, media
